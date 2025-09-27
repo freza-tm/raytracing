@@ -10,7 +10,6 @@ image.SaveToFile( "output.bmp" );
 
 System.Diagnostics.Process.Start( new System.Diagnostics.ProcessStartInfo( "output.bmp" ) { UseShellExecute = true } );
 
-
 Camera SmallScene()
 {
 	var scene = new Scene();
@@ -25,6 +24,7 @@ Camera SmallScene()
 	scene.Add( new Sphere( new Vector( -1.0, 0, -1.0 ), 0.5, materialLeft ) );
 	scene.Add( new Sphere( new Vector( -1.0, 0, -1.0 ), 0.4, materialBubble ) );
 	scene.Add( new Sphere( new Vector( 1.0, 0, -1.0 ), 0.5, materialRight ) );
+	scene.InitializeLookup();
 
 	return new Camera( new Vector( -2, 2, 1 ), new Vector( 0, 0, -1 ), new Vector( 0, 1, 0 ), Width, Height, scene )
 	{
@@ -79,6 +79,7 @@ Camera BigScene()
 	scene.Add( new Sphere( new Vector( -4, 1, 0 ), 1.0, new Lambertian( new Vector( 0.4, 0.2, 0.1 ) ) ) );
 
 	scene.Add( new Sphere( new Vector( 4, 1, 0 ), 1.0, new Metal( new Vector( 0.7, 0.6, 0.5 ), 0.0 ) ) );
+	scene.InitializeLookup();
 
 	return new Camera( new Vector( 13, 2, 3 ), new Vector( 0, 0, 0 ), new Vector( 0, 1, 0 ), Width, Height, scene )
 	{

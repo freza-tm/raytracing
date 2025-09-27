@@ -39,4 +39,10 @@ internal sealed class Sphere( Vector Center, double Radius, IMaterial Material )
 
 		return true;
 	}
+
+	public double[] GetBounds()=>
+	[
+		Center.X - Radius, Center.Y - Radius, Center.Z - Radius,
+		Center.X + Radius, Center.Y + Radius, Center.Z + Radius
+	];
 }
