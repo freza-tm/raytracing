@@ -1,0 +1,17 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="Raytracer.MainWindow"
+        Title="Simple raytracer by Freza">
+    <DockPanel>
+    <StackPanel Orientation="Vertical" DockPanel.Dock="Right">
+    <Label>Resolution</Label>
+    <ComboBox/>
+    <Button Command="{Binding Start}"> Start</Button>
+    <TextBlock Text="{Binding Samples}" />
+    </StackPanel>
+    <Image Source="{Binding Image}" Width="1024" Height="768"/>
+     </DockPanel>
+</Window>

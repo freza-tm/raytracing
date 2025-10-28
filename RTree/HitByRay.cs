@@ -22,9 +22,9 @@ public class HitByRay : ICheck
 		Span<double> maxT = stackalloc double[_origin.Length];
 		Span<double> candidatePlane = stackalloc double[_origin.Length];
 		Span<double> coordinate = stackalloc double[_origin.Length];
-		maxT.Fill( 0 );
-		candidatePlane.Fill( 0 );
-		coordinate.Fill( 0 );
+		maxT.Clear();
+		candidatePlane.Clear();
+		coordinate.Clear();
 		for( int i = 0; i < _origin.Length; i++ )
 		{
 			if( _origin[i] < box_min[i] )

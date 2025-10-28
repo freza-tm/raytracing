@@ -1,55 +1,76 @@
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Marshalling;
+using Avalonia;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 
-internal sealed class OutputImage : IDisposable
+internal sealed class OutputImage( int width, int height ) : IDisposable
 {
-	private Image<Rgba32> _bitmap;
+	private Vector[] _image = new Vector[width * height];
+	private WriteableBitmap _bitmap = new( new PixelSize( width, height ), new Avalonia.Vector( 96, 96 ), PixelFormat.Rgba8888, AlphaFormat.Opaque );
 
-	public OutputImage( int width, int height )
-	{
-		_bitmap = new Image<Rgba32>( width, height );
-	}
+	public void Dispose() => _bitmap?.Dispose();
 
-	public void Dispose() => _bitmap.Dispose();
+	public event EventHandler? BitmapUpdated;
 
 	public void SaveToFile( string fileName )
 	{
-		_bitmap.Save( fileName );
+		_bitmap?.Save( fileName );
 	}
 
-	public void SetPixels( Func<int, IEnumerable<Pixel>> pixelsProducer )
-	{
-		int doneRows = 0;
-		List<Pixel>[] generatedImage = new List<Pixel>[_bitmap.Height];
+	public IImage Image => _bitmap;
 
-		Parallel.ForEach( Enumerable.Range( 0, _bitmap.Height ), GenerateRow );
+	public bool DumpBitmap { get; set; }
+	public int Divisor { get; private set; }
+
+	public void AddPixels( Func<int, IEnumerable<Vector>> pixelsProducer )
+	{
+		if( Divisor == 0 )
+		{
+			Array.Fill<Vector>( _image, new Vector() );
+		}
+
+		Parallel.ForEach( Enumerable.Range( 0, height ), GenerateRow );
 
 		void GenerateRow( int row )
 		{
-			var buffer = new List<Pixel>( _bitmap.Width );
-			buffer.AddRange( pixelsProducer( row ) );
-
-			var progress = Interlocked.Increment( ref doneRows );
-			System.Console.Out.WriteLine( $"Scanline {progress + 1,4} / {_bitmap.Height,4}" );
-
-			generatedImage[row] = buffer;
+			var rowData = _image.AsSpan<Vector>().Slice( row * width, width );
+			int i = 0;
+			foreach( var pixel in pixelsProducer( row ) )
+			{
+				rowData[i++] += pixel;
+			}
 		}
 
-		_bitmap.ProcessPixelRows( StorePixels );
+		Divisor++;
 
-		void StorePixels( PixelAccessor<Rgba32> pixelAcessor )
+		if( DumpBitmap )
 		{
-			for( int row = 0; row < _bitmap.Height; row++ )
+			using var data = _bitmap.Lock();
+
+			Span<Pixel> pixels = stackalloc Pixel[width];
+
+			for( int row = 0; row < height; row++ )
 			{
-				var rowData = pixelAcessor.GetRowSpan( row );
-				var source = generatedImage[row];
-				for( int column = 0; column < pixelAcessor.Width; column++ )
+				Span<Vector> sourceRow = _image.AsSpan<Vector>()[(row * width)..];
+				for( int x = 0; x < width; x++ )
 				{
-					rowData[column].R = source[column].Red;
-					rowData[column].G = source[column].Green;
-					rowData[column].B = source[column].Blue;
+					pixels[x] = new Pixel( sourceRow[x] / Divisor );
 				}
+
+				{
+					var dstSpanOfBytes = MemoryMarshal.CreateSpan( ref Unsafe.AddByteOffset( ref Unsafe.NullRef<byte>(), data.Address + row * data.RowBytes ), data.RowBytes );
+
+					var dstSpanOfPixels = MemoryMarshal.Cast<byte, Pixel>( dstSpanOfBytes );
+
+					pixels.CopyTo( dstSpanOfPixels );
+				}
+
 			}
+			DumpBitmap = false;
+			BitmapUpdated?.Invoke( this, EventArgs.Empty );
 		}
 	}
 }

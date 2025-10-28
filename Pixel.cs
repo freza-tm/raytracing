@@ -1,5 +1,17 @@
-internal record struct Pixel( byte Red, byte Green, byte Blue )
+using System.Runtime.InteropServices;
+
+[StructLayout( LayoutKind.Explicit, Size = 4 )]
+internal struct Pixel( byte Red, byte Green, byte Blue )
 {
+	[FieldOffset( 0 )]
+	public byte Red = Red;
+	[FieldOffset( 1 )]
+	public byte Green = Green;
+	[FieldOffset( 2 )]
+	public byte Blue = Blue;
+
+
+
 	public Pixel( Vector v )
 	: this( v.X, v.Y, v.Z ) { }
 

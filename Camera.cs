@@ -18,10 +18,8 @@ internal sealed class Camera( Vector Eye, Vector Target, Vector Up, int ImageWid
 
 	public int SamplesPerPixel { get; init; } = 1;
 
-	public OutputImage GenerateImage()
+	public void GenerateImage( OutputImage image )
 	{
-		var image = new OutputImage( ImageWidth, ImageHeight );
-
 		var focalLength = (Eye - Target).Magnitude;
 
 		var w = (Eye - Target).Normalized();
@@ -43,12 +41,9 @@ internal sealed class Camera( Vector Eye, Vector Target, Vector Up, int ImageWid
 		var viewportTopLeft = Eye - focalLength * w - viewportU / 2 - viewportV / 2;
 		var topLeftPixelCenter = viewportTopLeft + 0.5 * (pixelDeltaU + pixelDeltaV);
 
-		image.SetPixels( GeneratePixels );
+		image.AddPixels( GeneratePixels );
 
-
-		return image;
-
-		IEnumerable<Pixel> GeneratePixels( int row )
+		IEnumerable<Vector> GeneratePixels( int row )
 		{
 			for( int x = 0; x < ImageWidth; x++ )
 			{
@@ -58,14 +53,14 @@ internal sealed class Camera( Vector Eye, Vector Target, Vector Up, int ImageWid
 				{
 					pixelColor += GetRayColor( GetRay( sample, pixelCenter ) );
 				}
-				yield return new Pixel( pixelColor / SamplesPerPixel );
+				yield return pixelColor / SamplesPerPixel;
 			}
 		}
 
 		Ray GetRay( int sample, Vector pixelCenter )
 		{
-			if( sample == 0 )
-				return new Ray( Eye, pixelCenter - Eye );
+			// if( sample == 0 )
+			// 	return new Ray( Eye, pixelCenter - Eye );
 
 			(var sampleU, var sampleV, _) = SampleSquare();
 
